@@ -66,6 +66,55 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	taskID, err := strconv.Atoi(vars["id"])
+
+	if err != nil {
+		fmt.Fprintf(w, "Invalid ID")
+		return
+	}
+
+	for i, task := range tasks {
+		if task.ID == taskID {
+			tasks = append(tasks[:i], tasks[i+1:]...)
+			fmt.Fprintf(w, "The task with ID %v has been remove succesfully", taskID)
+			return
+		}
+
+	}
+
+	fmt.Fprintf(w, "The task with ID %v doesn't exist", taskID)
+}
+
+func updateTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	var updatedTask task
+	taskID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		fmt.Fprintf(w, "Invalid ID")
+		return
+	}
+
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Please entry correct data")
+	}
+
+	json.Unmarshal(reqBody, &updatedTask)
+
+	for i, task := range tasks {
+		if task.ID == taskID {
+			tasks = append(tasks[:i], tasks[i+1:]...)
+			updatedTask.ID = taskID
+			tasks = append(tasks, updatedTask)
+
+			fmt.Fprintf(w, "The task with ID %v has been updated succesfully", taskID)
+		}
+	}
+
+}
+
 func indexRoute(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to my API")
 }
@@ -77,5 +126,8 @@ func main() {
 	router.HandleFunc("/task", getTasks).Methods("GET")
 	router.HandleFunc("/task", createTask).Methods("POST")
 	router.HandleFunc("/task/{id}", getTask).Methods("GET")
+	router.HandleFunc("/task/{id}", deleteTask).Methods("DELETE")
+	router.HandleFunc("/task/{id}", updateTask).Methods("PUT")
+
 	log.Fatal(http.ListenAndServe(":3000", router))
 }
