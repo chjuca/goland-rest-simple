@@ -8,16 +8,15 @@ import (
 	"net/http"
 	"strconv"
 
+	"./src/models"
 	"github.com/gorilla/mux"
 )
 
-type task struct {
-	ID      int    `json:ID`
-	Name    string `json:Name`
-	Content string `jseleteon:Content`
-}
-
+type task models.Task
 type allTasks []task
+
+type pet models.Pet
+type allPets []pet
 
 var tasks = allTasks{
 	{
@@ -25,6 +24,20 @@ var tasks = allTasks{
 		Name:    "Task One",
 		Content: "Some content",
 	},
+}
+
+var pets = allPets{
+	{
+		ID:   1,
+		Name: "Pet One",
+		Age:  12,
+	},
+}
+
+func getPets(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(pets)
 }
 
 func getTasks(w http.ResponseWriter, r *http.Request) {
@@ -120,10 +133,12 @@ func indexRoute(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/", indexRoute)
 	router.HandleFunc("/task", getTasks).Methods("GET")
+	router.HandleFunc("/pets", getPets).Methods("GET")
 	router.HandleFunc("/task", createTask).Methods("POST")
 	router.HandleFunc("/task/{id}", getTask).Methods("GET")
 	router.HandleFunc("/task/{id}", deleteTask).Methods("DELETE")
